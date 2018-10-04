@@ -33,7 +33,7 @@ __interrupt void Timer_A (void)
     B1IE |= BUTTON1;                    // Re-enable button interrupt
     B1IFG &= ~BUTTON1;                  // Clear Flag
 
-    TACTL |= MC_0 + TACLR;              // Set Timer A to up mode and clear TA register
+    TACTL |= MC_1 + TACLR;              // Set Timer A to up mode and clear TA register
 }
 
 #pragma vector=PORT1_VECTOR

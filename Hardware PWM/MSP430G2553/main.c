@@ -1,22 +1,21 @@
-#include <msp430.h> 
+#include <msp430.h>
 #include <boardMacros.h>
 
 /*
- *  Kevin O'Hare
- *  oharek8@students.rowan.edu
+ * Kevin O'Hare
+ * oharek8@students.rowan.edu
  */
 
 /*
  * main.c
  */
-
 int main(void)
 {
-    WDTCTL = WDTPW | WDTHOLD;   // stop watchdog timer
-
-    // LED1 Setup
+	WDTCTL = WDTPW | WDTHOLD;	// stop watchdog timer
+	
+	// LED1 Setup
     L1DIR |= LED1;
-    L1OUT |= LED1;
+    L1OUT &= ~LED1;
 
     // LED2 Setup
     L2DIR |= LED2;
@@ -31,47 +30,52 @@ int main(void)
     B1IFG &= ~BUTTON1;                      // Clear Interrupt Flag
 
     // Timer A Setup
-    TA0CCTL0 = CCIE;                        // Enable CCR0 interrupt
-    TA0CTL = TASSEL_2 + MC_1;               // Set Timer A to use aclk on up mode
+    TA0CTL = TASSEL_2 + MC_1;               // Set Timer A1 to use aclk on up mode
     TA0CCR0 = 1000;                         // Set frequency to ~1 kHz, Setting CCR0 to 1001 prevents overlap with CCR1
-
-    TA0CCTL1 = CCIE;                        // Enable CCR1 Interrupt
-    TA0CCR1 = 500;
+    TA0CCTL1 = OUTMOD_7;                    // Enable Toggle/Set
+    TA0CCR1 = 500;                          // Sets duty to 50%
     TA0CCR2 = 800;                          // Allows debounce for 2000 cycles.
 
+
+
+    // Timer Out Setup
+    P1SEL |= LED2;
+    P1SEL2 &= ~LED2;                        // Allow Timer to Toggle/Set
+
+
     __bis_SR_register(LPM0_bits + GIE);
+
+	return 0;
 }
 
-#pragma vector=TIMER0_A0_VECTOR
-__interrupt void Timer_A0 (void)
+/*#pragma vector=TIMER0_A0_VECTOR
+__interrupt void Timer_A (void)
 {
-    L1OUT |= LED1;                          // Turns LED at start of period
-
     TA0CCTL0 &= ~CCIFG;                     // Clear Timer Flag
-}
-
+}*/
 #pragma vector=TIMER0_A1_VECTOR             // Determines duty cycle
 __interrupt void Timer_A1 (void)
 {
     switch(TA0IV)
     {
         case 0: break;
-        case 2: {
-                L1OUT &= ~LED1;
-                TA0CCTL1 &= ~CCIFG;         // Clear CCR1 Flag
-                }
-                break;
+        case 2: break;
         case 4: {
-                B1IE |= BUTTON1;            // Re-enable button interrupt
-                B1IFG &= ~BUTTON1;          // Clear Flag
+                B1IE |= BUTTON1;                // Re-enable button interrupt
+                B1IFG &= ~BUTTON1;              // Clear Flag
                 TA0CCTL2 &= ~CCIE;
-                TA0CCTL2 &= ~CCIFG;         // Clear CCR2 Flag
+                TA0CCTL2 &= ~CCIFG;                     // Clear CCR2 Flag
                 TA0CTL |= TACLR;
                 }
-                break;
-        case 10:break;
+            break;
+    case 10: break;
     }
+
+
+   // TA0CCTL2 &= ~CCIFG;                     // Clear CCR2 Flag
+    TA0CCTL1 &= ~CCIFG;                     // Clear CCR1 Flag
 }
+
 #pragma vector=PORT1_VECTOR
 __interrupt void Port_1(void)
 {
@@ -86,15 +90,16 @@ __interrupt void Port_1(void)
 
     while((B1IN & BUTTON1) == 0)
     {
-        L2OUT |= LED2;
+        L1OUT |= LED1;
     }
 
-    L2OUT &= ~LED2;
+    L1OUT &= ~LED1;
 
 
 
 
-    TA0CCTL2 |= CCIE;                       // Disable interrupt on CCR0 and CCR1 to prevent early interupt
-    TA0CTL |= TACLR;                        // Set Timer A to continuous mode for debounce
+    TA0CCTL2 |= CCIE;                      // Disable interrupt on CCR0 and CCR1 to prevent early interupt
+    //TA0CCTL1 &= ~(CCIE + OUTMOD_7);
+    TA0CTL |= TACLR;                     // Set Timer A to continuous mode for debounce
     B1IFG &= ~BUTTON1;                      // Clear Flag
 }
