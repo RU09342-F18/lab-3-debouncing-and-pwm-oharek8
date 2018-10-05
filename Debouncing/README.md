@@ -1,18 +1,8 @@
-# Software Debouncing
-In previous labs, we talked about how objects such as switches can cause some nasty effects since they are actually a mechanical system at heart. We talked about the simple hardware method of debouncing, but due to the many different design constraints, you may not be able to add or adjust hardware. Debouncing is also only one of many applications which would require the use of built in Timers to allow for other processes to take place.
+# Summary of Code
+This program allows the user to control the duty cycle of an LED blinking at 1 kHz. By pressing a button, the duty cycle increases by ten percent. At 100 percent, the duty cycle rolls over. As the duty cycl eof the signal increases, so does the brightness of the LED.
 
-## Task
-You need to utilize the TIMER modules within the MSP430 processors to implement a debounced switch to control the state of an LED. You most likely will want to hook up your buttons on the development boards to an oscilloscope to see how much time it takes for the buttons to settle. The idea here is that your processor should be able to run other code, while relying on timers and interrupts to manage the debouncing in the background. *You should not be using polling techniques for this assignment.*
+# Functionality of Code
+Software PWM uses a timer, 2 capture/compare interrupts, and a button interrupt. The timer is set to use the SMCLK, which is roughly 1 MHz. In order to replicate a frequency of 1 kHz, the capture/compare register CCR0 is set to 1000. This allows SMCLK to act as a 1 kHZ frequency, as SMCLK can count up to the number 1000 1000 times, or hertz, a second. We control the duty cycle using an interrupt on CCR1. To make a duty cycle of 50 percent, we simply set CCR1 to 500. With the LED initialized as on, the interrupt at CCR1 turns the LED off. At CCR0, the LED is turned back on. Since 500 is half of 1000, the LED is on for half of the period, hence making a 50 percent duty cycle. This duty cycle can be increased by increaseing CCR1 by 10 percent of the period, in this case 100. We increase the duty cycle using a button interrupt. After the button is debounced, the CCR1 is increased by 100, unless it is already at 100 percent, in which case the duty cycle is reset to zero percent.
 
-## Deliverables
-You will need to have two folders in this repository, one for each of the processors that you used for this part of the lab. Remember to replace this README with your own.
-
-### Hints
-You need to take a look at how the P1IE and P1IES registers work and how to control them within an interrupt routine. Remember that the debouncing is not going to be the main process you are going to run by the end of the lab.
-
-## Extra Work
-### Low Power Modes
-Go into the datasheets or look online for information about the low power modes of your processors and using Energy Trace, see what the lowest power consumption you can achieve while still running your debouncing code. Take a note when your processor is not driving the LED (or unplug the header connecting the LED and check) but running the interrupt routine for your debouncing.
-
-### Double the fun
-Can you expand your code to debounce two switches? Do you have to use two Timer peripherals to do this?
+# Troubleshooting
+When pressing the button you may find that the blinking LED turns off. Congradulations! You've caused interrupt to occur in the short period of time the LED in the off portion of its duty cycle. The led will resume blinking when the button is released.
