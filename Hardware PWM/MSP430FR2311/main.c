@@ -32,8 +32,8 @@ int main(void)
     B1IFG &= ~BUTTON1;                      // Clear Interrupt Flag
 
     // Timer A Setup
-    TB1CTL = TBSSEL_2 + MC_1;               // Set Timer A1 to use aclk on up mode
-    TB1CCR0 = 1000;                         // Set frequency to ~1 kHz, Setting CCR0 to 1001 prevents overlap with CCR1
+    TB1CTL = TBSSEL_2 + MC_1;               // Set Timer B1 to use aclk on up mode
+    TB1CCR0 = 1000;                         // Set frequency to ~1 kHz
     //TB1CCTL0 = CLLD_0;
     TB1CCTL1 = /*CLLD_0 +*/ OUTMOD_7;           // Enable Toggle/Set
     TB1CCR1 = 500;                          // Sets duty to 50%
@@ -58,11 +58,11 @@ __interrupt void Timer_B1 (void)
         case 0: break;
         case 2: break;
         case 4: {
-                B1IE |= BUTTON1;                // Re-enable button interrupt
-                B1IFG &= ~BUTTON1;              // Clear Flag
-                TB1CCTL2 &= ~CCIE;
-                TB1CCTL2 &= ~CCIFG;                     // Clear CCR2 Flag
-                TB1CTL |= TBCLR;
+                B1IE |= BUTTON1;            // Re-enable button interrupt
+                B1IFG &= ~BUTTON1;          // Clear Flag
+                TB1CCTL2 &= ~CCIE;          // Disable CCR2 Interrupt
+                TB1CCTL2 &= ~CCIFG;         // Clear CCR2 Flag
+                TB1CTL |= TBCLR;            // Clear Timer B1 Register
                 }
             break;
     case 10: break;
@@ -87,15 +87,15 @@ __interrupt void Port_1(void)
 
     while((B1IN & BUTTON1) == 0)
     {
-        L1OUT |= LED1;
+        L1OUT |= LED1;                      // Turn on LED while button is pressed
     }
 
-    L1OUT &= ~LED1;
+    L1OUT &= ~LED1;                         // Turn off LED when button is released
 
 
 
 
-    TB1CCTL2 |= CCIE;                      // Disable interrupt on CCR0 and CCR1 to prevent early interupt
-    TB1CTL |= TBCLR;                     // Set Timer A to continuous mode for debounce
+    TB1CCTL2 |= CCIE;                       // Enable Interrupt on CCR2
+    TB1CTL |= TBCLR;                        // CLear Timer B1 Register
     B1IFG &= ~BUTTON1;                      // Clear Flag
 }
