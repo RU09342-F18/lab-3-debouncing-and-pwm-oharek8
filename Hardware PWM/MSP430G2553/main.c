@@ -98,8 +98,7 @@ __interrupt void Port_1(void)
 
 
 
-    TA0CCTL2 |= CCIE;                     	// Disable interrupt on CCR0 and CCR1 to prevent early interupt
-    //TA0CCTL1 &= ~(CCIE + OUTMOD_7);
-    TA0CTL |= TACLR;                     	// Set Timer A to continuous mode for debounce
+    TA0CCTL2 |= CCIE;                     	// Enable Interrupt on CCR2
+    TA0CTL |= TACLR;                     	// Clear Timer A0 Register
     B1IFG &= ~BUTTON1;                      	// Clear Flag
 }
